@@ -22,6 +22,13 @@
 #include <Security/Security.h>
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <wincrypt.h>
+
+#include "base64-inl.h"
+#endif
+
 namespace node {
 
 using ncrypto::BignumPointer;
@@ -514,10 +521,77 @@ void ReadMacOSKeychainCertificates(
 }
 #endif  // __APPLE__
 
+#ifdef _WIN32
+void ReadWindowsKeychainCertificates(
+    std::vector<std::string>* system_root_certificates) {
+  const HCERTSTORE hStore = CertOpenSystemStoreW(0, L"ROOT");
+  CHECK_NE(hStore, nullptr);
+
+  auto cleanup =
+      OnScopeLeave([hStore]() { CHECK_EQ(CertCloseStore(hStore, 0), TRUE); });
+
+  PCCERT_CONTEXT certificate_context_ptr = nullptr;
+
+  std::vector<X509*> system_root_certificates_X509;
+
+  while ((certificate_context_ptr = CertEnumCertificatesInStore(
+              hStore, certificate_context_ptr)) != nullptr) {
+    const DWORD certificate_buffer_size =
+        CertGetNameStringW(certificate_context_ptr,
+                           CERT_NAME_SIMPLE_DISPLAY_TYPE,
+                           0,
+                           nullptr,
+                           nullptr,
+                           0);
+
+    CHECK_GT(certificate_buffer_size, 0);
+
+    std::vector<wchar_t> certificate_name(certificate_buffer_size);
+
+    CHECK_GT(CertGetNameStringW(certificate_context_ptr,
+                                CERT_NAME_SIMPLE_DISPLAY_TYPE,
+                                0,
+                                nullptr,
+                                certificate_name.data(),
+                                certificate_buffer_size),
+             0);
+    const unsigned char* certificate_src_ptr =
+        reinterpret_cast<const unsigned char*>(
+            certificate_context_ptr->pbCertEncoded);
+    const size_t certificate_src_length =
+        certificate_context_ptr->cbCertEncoded;
+
+    X509* cert =
+        d2i_X509(nullptr, &certificate_src_ptr, certificate_src_length);
+
+    system_root_certificates_X509.emplace_back(cert);
+              }
+
+  for (size_t i = 0; i < system_root_certificates_X509.size(); i++) {
+    int result = 0;
+
+    BIOPointer bio(BIO_new(BIO_s_mem()));
+    CHECK(bio);
+
+    BUF_MEM* mem = nullptr;
+    result = PEM_write_bio_X509(bio.get(), system_root_certificates_X509[i]);
+
+    BIO_get_mem_ptr(bio.get(), &mem);
+    std::string certificate_string_pem(mem->data, mem->length);
+    system_root_certificates->emplace_back(certificate_string_pem);
+
+    bio.reset();
+  }
+}
+#endif
+
 void ReadSystemStoreCertificates(
     std::vector<std::string>* system_root_certificates) {
 #ifdef __APPLE__
   ReadMacOSKeychainCertificates(system_root_certificates);
+#endif
+#ifdef _WIN32
+  ReadWindowsKeychainCertificates(system_root_certificates);
 #endif
 }
 
