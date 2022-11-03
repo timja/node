@@ -60,6 +60,7 @@ const conditionalOpts = [
         hasOpenSSL3 ? '--openssl-shared-config' : '',
         '--tls-cipher-list',
         '--use-bundled-ca',
+        common.isWindows ? '--node-use-system-ca' : '',
         '--use-openssl-ca',
         common.isMacOS ? '--use-system-ca' : '',
         '--secure-heap',
