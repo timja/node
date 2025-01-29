@@ -565,7 +565,7 @@ void ReadWindowsKeychainCertificates(
         d2i_X509(nullptr, &certificate_src_ptr, certificate_src_length);
 
     system_root_certificates_X509.emplace_back(cert);
-              }
+  }
 
   for (size_t i = 0; i < system_root_certificates_X509.size(); i++) {
     int result = 0;
