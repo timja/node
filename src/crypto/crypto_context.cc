@@ -522,7 +522,7 @@ void ReadMacOSKeychainCertificates(
 #endif  // __APPLE__
 
 #ifdef _WIN32
-void ReadWindowsKeychainCertificates(
+void ReadWindowsCertificates(
     std::vector<std::string>* system_root_certificates) {
   const HCERTSTORE hStore = CertOpenSystemStoreW(0, L"ROOT");
   CHECK_NE(hStore, nullptr);
@@ -591,7 +591,7 @@ void ReadSystemStoreCertificates(
   ReadMacOSKeychainCertificates(system_root_certificates);
 #endif
 #ifdef _WIN32
-  ReadWindowsKeychainCertificates(system_root_certificates);
+  ReadWindowsCertificates(system_root_certificates);
 #endif
 }
 

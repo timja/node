@@ -2841,14 +2841,6 @@ environment variables.
 
 See `SSL_CERT_DIR` and `SSL_CERT_FILE`.
 
-### `--node-use-system-ca`
-
-Node.js uses the trusted CA certificates present in the system store along with
-the `--use-bundled-ca`, `--use-openssl-ca` options.
-
-Only current user certificates are accessible using this method, not the local
-machine store. This option is available to Windows only.
-
 ### `--use-largepages=mode`
 
 <!-- YAML
@@ -2873,8 +2865,6 @@ The following values are valid for `mode`:
 
 Node.js uses the trusted CA certificates present in the system store along with
 the `--use-bundled-ca`, `--use-openssl-ca` options.
-
-This option is available to macOS only.
 
 ### `--v8-options`
 
@@ -3212,7 +3202,6 @@ one is included in the list below.
 * `--no-network-family-autoselection`
 * `--no-warnings`
 * `--node-memory-debug`
-* `--node-use-system-ca`
 * `--openssl-config`
 * `--openssl-legacy-provider`
 * `--openssl-shared-config`
